@@ -12,6 +12,22 @@ const bot = new TelegramBot(token, {
     polling: true
 });
 
+function getHeight(){
+    return Promise.resolve(cache.get('HEIGHT'))
+        .then(result => {
+            if (result != undefined) {
+                return result;
+            }
+            return requestify.get('https://explorer.mvs.org/api/height')
+                .then(response => response.getBody().result)
+                .then(height => {
+                    cache.put('HEIGHT', height, 10 * 1000);
+                    console.info('save height to cache');
+                    return height;
+                });
+        });
+}
+
 function getPrice(asset, base) {
     return Promise.resolve(cache.get('PRICES'))
         .then(result => {
@@ -56,8 +72,7 @@ bot.onText(/\/balance(?:\s*)(.*)/, (msg, match) => {
 
 
 bot.onText(/\/height/, (msg, match) => {
-    requestify.get('https://explorer.mvs.org/api/height')
-        .then(response => response.getBody().result)
+    getHeight()
         .then(height => bot.sendMessage(msg.chat.id, height))
         .catch(error => bot.sendMessage(msg.chat.id, 'Not found'));
 });
@@ -137,4 +152,4 @@ bot.on('callback_query', function onCallbackQuery(callbackQuery) {
 
 });
 
-bot.on('message', console.log)
+bot.on('message', console.log);
