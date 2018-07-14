@@ -4,7 +4,6 @@
     "description": "",
     "main": "index.js",
     "dependencies": {
-        "bluebird": "^3.5.1",
         "node-telegram-bot-api": "^0.30.0",
         "requestify": "^0.2.5",
         "ttl": "^1.3.1"
