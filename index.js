@@ -12,7 +12,7 @@ const bot = new TelegramBot(token, {
     polling: true
 });
 
-function getHeight(){
+function getHeight() {
     return Promise.resolve(cache.get('HEIGHT'))
         .then(result => {
             if (result != undefined) {
@@ -28,19 +28,19 @@ function getHeight(){
         });
 }
 
-function getPrice(asset, base) {
+function getTicker(asset, base) {
     return Promise.resolve(cache.get('PRICES'))
         .then(result => {
             if (result != undefined) {
                 console.info('load prices from cache');
-                return result[asset][base].price;
+                return result[asset][base];
             }
             return requestify.get('https://explorer.mvs.org/api/pricing/tickers')
                 .then(response => response.getBody().result)
                 .then(prices => {
                     cache.put('PRICES', prices);
                     console.info('save prices to cache');
-                    return prices[asset][base].price;
+                    return prices[asset][base];
                 });
         });
 }
@@ -133,15 +133,15 @@ bot.on('callback_query', function onCallbackQuery(callbackQuery) {
     };
     let text;
     if (data.command === 'price') {
-        getPrice('ETP', data.base)
-            .then(price => {
+        getTicker('ETP', data.base)
+            .then(ticker => {
                 var formatter = new Intl.NumberFormat(callbackQuery.from.language_code, {
                     minimumFractionDigits: 2,
                     style: 'currency',
                     currency: data.base,
                     maximumFractionDigits: (data.base == 'BTC') ? 6 : 2
                 });
-                bot.sendMessage(opts.chat_id, formatter.format(price));
+                bot.sendMessage(opts.chat_id, `${formatter.format(ticker.price)}\n${ticker.percent_change_1h}% in 1 hour\n${ticker.percent_change_24h}% in 24 hours\n${ticker.percent_change_7d}% in 7 days\n${formatter.format(ticker.market_cap)} market cap\n${formatter.format(ticker.volume_24h)} 24h volume`);
                 bot.answerCallbackQuery(callbackQuery.id);
             })
             .catch(error => {
