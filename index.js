@@ -23,15 +23,15 @@ bot.onText(/\/start/, (msg, match) => {
             ]
         })
     };
-    bot.sendMessage(msg.chat.id, 'Hi. I am MyETPBot. You can get the current price and blockchain height from the menu or ask any address balance by /address ADDRESS. Have fun!', opts);
+    bot.sendMessage(msg.chat.id, 'Hi. I am MyETPBot. You can get the current price and blockchain height from the menu or ask for the balance of an address. Have fun!', opts);
 
 });
 
-bot.onText(/balance(?:\s*)(.+)/i, (msg, match) => {
+bot.onText(/balance(?:.*) (M[A-Za-z0-9]{33})/i, (msg, match) => {
     const chatId = msg.chat.id;
     const address = match[1];
     getBalance(address)
-        .then(balance => bot.sendMessage(chatId, balance))
+        .then(balance => bot.sendMessage(chatId, `The balance of ${address} is: ${balance}`))
         .catch(error => bot.sendMessage(chatId, 'Not found'));
 });
 
@@ -152,8 +152,13 @@ function getTicker(asset, base) {
         });
 }
 
-function getBalance(address){
+function getBalance(address) {
     return requestify.get('https://explorer.mvs.org/api/address/info/' + address)
         .then(response => response.getBody().result.info.ETP)
-        .then(balance => balance / 100000000);
+        .then(balance => {
+            if (balance)
+                return balance / 100000000;
+            else
+                throw Error('Balance not found');
+        });
 }
