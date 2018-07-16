@@ -12,47 +12,14 @@ const bot = new TelegramBot(token, {
     polling: true
 });
 
-function getHeight() {
-    return Promise.resolve(cache.get('HEIGHT'))
-        .then(result => {
-            if (result != undefined) {
-                return result;
-            }
-            return requestify.get('https://explorer.mvs.org/api/height')
-                .then(response => response.getBody().result)
-                .then(height => {
-                    cache.put('HEIGHT', height, 10 * 1000);
-                    console.info('save height to cache');
-                    return height;
-                });
-        });
-}
-
-function getTicker(asset, base) {
-    return Promise.resolve(cache.get('PRICES'))
-        .then(result => {
-            if (result != undefined) {
-                console.info('load prices from cache');
-                return result[asset][base];
-            }
-            return requestify.get('https://explorer.mvs.org/api/pricing/tickers')
-                .then(response => response.getBody().result)
-                .then(prices => {
-                    cache.put('PRICES', prices);
-                    console.info('save prices to cache');
-                    return prices[asset][base];
-                });
-        });
-}
-
 bot.onText(/\/start/, (msg, match) => {
     console.log(msg);
     const opts = {
         reply_to_message_id: msg.message_id,
         reply_markup: JSON.stringify({
             keyboard: [
-                ['/price'],
-                ['/height']
+                ['price'],
+                ['height']
             ]
         })
     };
@@ -60,24 +27,23 @@ bot.onText(/\/start/, (msg, match) => {
 
 });
 
-bot.onText(/\/balance(?:\s*)(.*)/, (msg, match) => {
+bot.onText(/balance(?:\s*)(.+)/i, (msg, match) => {
     const chatId = msg.chat.id;
     const address = match[1];
-    requestify.get('https://explorer.mvs.org/api/address/info/' + address)
-        .then(response => response.getBody().result.info.ETP)
-        .then(balance => bot.sendMessage(chatId, balance / 100000000))
+    getBalance(address)
+        .then(balance => bot.sendMessage(chatId, balance))
         .catch(error => bot.sendMessage(chatId, 'Not found'));
 });
 
 
 
-bot.onText(/\/height/, (msg, match) => {
+bot.onText(/height/i, (msg, match) => {
     getHeight()
         .then(height => bot.sendMessage(msg.chat.id, height))
         .catch(error => bot.sendMessage(msg.chat.id, 'Not found'));
 });
 
-bot.onText(/\/price/, (msg, match) => {
+bot.onText(/price/i, (msg, match) => {
     const opts = {
         reply_markup: {
             inline_keyboard: [
@@ -123,7 +89,6 @@ bot.onText(/\/price/, (msg, match) => {
     bot.sendMessage(msg.chat.id, 'Choose base currency', opts);
 });
 
-// Handle callback queries
 bot.on('callback_query', function onCallbackQuery(callbackQuery) {
     const data = JSON.parse(callbackQuery.data);
     const msg = callbackQuery.message;
@@ -153,3 +118,42 @@ bot.on('callback_query', function onCallbackQuery(callbackQuery) {
 });
 
 bot.on('message', console.log);
+
+function getHeight() {
+    return Promise.resolve(cache.get('HEIGHT'))
+        .then(result => {
+            if (result != undefined) {
+                return result;
+            }
+            return requestify.get('https://explorer.mvs.org/api/height')
+                .then(response => response.getBody().result)
+                .then(height => {
+                    cache.put('HEIGHT', height, 10 * 1000);
+                    console.info('save height to cache');
+                    return height;
+                });
+        });
+}
+
+function getTicker(asset, base) {
+    return Promise.resolve(cache.get('PRICES'))
+        .then(result => {
+            if (result != undefined) {
+                console.info('load prices from cache');
+                return result[asset][base];
+            }
+            return requestify.get('https://explorer.mvs.org/api/pricing/tickers')
+                .then(response => response.getBody().result)
+                .then(prices => {
+                    cache.put('PRICES', prices);
+                    console.info('save prices to cache');
+                    return prices[asset][base];
+                });
+        });
+}
+
+function getBalance(address){
+    return requestify.get('https://explorer.mvs.org/api/address/info/' + address)
+        .then(response => response.getBody().result.info.ETP)
+        .then(balance => balance / 100000000);
+}

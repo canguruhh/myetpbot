@@ -11,7 +11,7 @@ node index.js
 ```
 
 # How does it work?
-It creates a bot object. This object connects to telegram and emits events for new incomming messages to your bot. To respond to different inputs the commands are defined as regular expressions that match the message text.
+It creates a bot object that connects to telegram and emits events for new incomming messages to your bot. To respond to different inputs the commands are defined as regular expressions that match the message text.
 
 If the commands requires the loading of external data (from the explorer) it caches them for later requests from other users.
 
