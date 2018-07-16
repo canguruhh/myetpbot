@@ -16,3 +16,5 @@ It creates a bot object that connects to telegram and emits events for new incom
 If the commands requires the loading of external data (from the explorer) it caches them for later requests from other users.
 
 On startup it also sends a message with the common commands as a keyboard layer. Functions that require feedback are implemented as callback messages that contain a stringified data object.
+
+A more detailed introduction you can find on [Medium](https://medium.com/@canguruhh/how-to-create-a-node-js-telegram-chatbot-3535068b0596)

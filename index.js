@@ -20,10 +20,12 @@ bot.onText(/\/start/, (msg, match) => {
             keyboard: [
                 ['price'],
                 ['height']
-            ]
+            ],
+            'one_time_keyboard': true
         })
     };
-    bot.sendMessage(msg.chat.id, 'Hi. I am MyETPBot. You can get the current price and blockchain height from the menu or ask for the balance of an address. Have fun!', opts);
+    if(msg.chat.type=="private")
+        bot.sendMessage(msg.chat.id, 'Hi. I am MyETPBot. You can get the current price and blockchain height from the menu or ask for the balance of an address. Have fun!', opts);
 
 });
 
